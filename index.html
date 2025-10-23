@@ -5,361 +5,359 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Make a Wish - 吹蠟燭小遊戲</title>
 <style>
-  :root{
-    --w: 800px; /* 基準畫布寬 */
-    --h: 600px; /* 基準畫布高 */
-  }
-  *{ box-sizing: border-box; }
-  body{
-    margin:0; background:#111; color:#fff; font-family: ui-sans-serif, -apple-system, "Noto Sans TC", Arial;
-    display:flex; align-items:center; justify-content:center; min-height:100dvh;
-  }
-  .game-wrap{
-    width:min(95vw, var(--w));
-    aspect-ratio: 4/3;
-    position:relative;
-    user-select:none;
-    -webkit-user-select:none;
-    overflow:hidden;
-    border-radius:16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.06);
-    background:#000;
-  }
-  .stage{
-    position:absolute; inset:0;
-    background: center/cover no-repeat url("./cake.png");
+  :root{ --w:800px; --h:600px; }
+  *{box-sizing:border-box}
+  body{margin:0;background:#0e0e0f;color:#fff;font-family:ui-sans-serif,-apple-system,"Noto Sans TC",Arial;display:flex;min-height:100dvh;align-items:center;justify-content:center}
+  .game-wrap{width:min(95vw,var(--w));aspect-ratio:4/3;position:relative;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.06);background:#000}
+  .stage{position:absolute;inset:0;}
+  /* 只顯示蛋糕上半部 */
+  .stage::before{
+    content:""; position:absolute; inset:0;
+    background:center/cover no-repeat url("./cake.png");
+    clip-path: inset(0 0 50% 0); /* 想多露一點→45%，更少→55% */
   }
 
-  /* UI */
-  .hud{
-    position:absolute; left:0; right:0; top:0;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:10px 14px; gap:10px;
-    background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0));
-    font-weight:700;
-  }
-  .badge{
-    background: rgba(0,0,0,.5);
-    padding:6px 10px; border-radius:999px; font-size:14px;
-  }
-  .hearts{
-    display:flex; gap:6px; align-items:center;
-  }
-  .heart{
-    width:18px; height:18px; display:inline-block;
-    background: currentColor; color:#ff5166;
-    clip-path: path("M12 21s-7.5-4.35-9.6-8.4C.6 9.1 2.1 6 5.1 6c1.6 0 3 .9 3.9 2.1C9.9 6.9 11.3 6 12.9 6c3 0 4.5 3.1 2.7 6.6C19.5 16.65 12 21 12 21z");
-    transform: scale(.9);
-  }
-  .heart.lost{ color:#444; }
+  .hud{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))}
+  .badge{background:rgba(0,0,0,.5);padding:6px 10px;border-radius:999px;font-size:14px;font-weight:700}
+  .hearts{display:flex;gap:6px}
+  .heart{width:18px;height:18px;display:inline-block;color:#ff5166;background:currentColor;clip-path:path("M12 21s-7.5-4.35-9.6-8.4C.6 9.1 2.1 6 5.1 6c1.6 0 3 .9 3.9 2.1C9.9 6.9 11.3 6 12.9 6c3 0 4.5 3.1 2.7 6.6C19.5 16.65 12 21 12 21z");transform:scale(.9)}
+  .heart.lost{color:#3a3a3a}
+  .mult{margin-left:8px;opacity:.9}
+  .timerbar{position:absolute;left:10px;right:10px;top:46px;height:6px;border-radius:999px;background:rgba(255,255,255,.15);overflow:hidden}
+  .timerbar>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7ae582,#ffd166,#ef476f);transform-origin:left center;transform:scaleX(1);transition:transform .1s linear}
 
-  /* 按鈕層 */
-  .overlay{
-    position:absolute; inset:0; display:grid; place-items:center;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,.35), rgba(0,0,0,.75));
-  }
-  .panel{
-    text-align:center; padding:24px 22px; border-radius:14px;
-    background: rgba(18,18,18,.75);
-    box-shadow: 0 6px 24px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.06);
-    backdrop-filter: blur(4px);
-  }
-  .title{ font-size:24px; margin:0 0 8px; }
-  .subtitle{ opacity:.8; margin:0 0 16px; font-size:14px; }
-  .btn{
-    appearance:none; border:none; cursor:pointer; font-weight:800; letter-spacing:.4px;
-    padding:12px 18px; border-radius:12px; background:#ffd166; color:#272400; font-size:15px;
-    box-shadow: 0 6px 0 #caa644, 0 12px 24px rgba(0,0,0,.3);
-    transition: transform .06s ease, box-shadow .06s ease, filter .06s ease;
-  }
-  .btn:hover{ filter:brightness(1.03); }
-  .btn:active{ transform: translateY(2px); box-shadow: 0 4px 0 #caa644, 0 8px 16px rgba(0,0,0,.35); }
+  .overlay{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at center,rgba(0,0,0,.35),rgba(0,0,0,.75))}
+  .panel{padding:22px;border-radius:14px;background:rgba(18,18,18,.75);box-shadow:0 6px 24px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.06);backdrop-filter:blur(4px);text-align:center;min-width:min(90%,420px)}
+  .title{font-size:24px;margin:0 0 6px}
+  .subtitle{opacity:.85;margin:0 0 12px;font-size:14px}
+  .btn{appearance:none;border:none;cursor:pointer;font-weight:800;letter-spacing:.4px;padding:12px 18px;border-radius:12px;background:#ffd166;color:#272400;font-size:15px;box-shadow:0 6px 0 #caa644,0 12px 24px rgba(0,0,0,.3);transition:transform .06s,box-shadow .06s,filter .06s}
+  .btn:hover{filter:brightness(1.03)} .btn:active{transform:translateY(2px);box-shadow:0 4px 0 #caa644,0 8px 16px rgba(0,0,0,.35)}
+  .input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #3a3a3a;background:#141414;color:#fff;outline:none;margin-bottom:12px}
 
-  /* 蠟燭 */
-  .candle{
-    position:absolute; width:60px; /* 依需求可調 */
-    transform: translate(-50%, -100%); /* 以底部中央對齊座標 */
-    pointer-events:auto; cursor:pointer;
-    will-change: transform, opacity;
-    transition: transform .08s ease;
-  }
-  .candle img{
-    width:100%; height:auto; display:block; image-rendering:auto;
-  }
-  .candle.off .on{ display:none; }
-  .candle.on  .off{ display:none; }
-  .candle.flash{ animation: flash .15s linear 2; }
-  @keyframes flash{ 0%,100%{ filter:none } 50%{ filter:brightness(1.35) } }
+  .candle{position:absolute;width:60px;transform:translate(-50%,-100%);cursor:pointer;will-change:transform,opacity;transition:filter .08s}
+  .candle img{width:100%;height:auto;display:block}
+  .candle.off .on{display:none} .candle.on .off{display:none}
+  .candle.flash{animation:flash .15s linear 2}
+  @keyframes flash{0%,100%{filter:none}50%{filter:brightness(1.35)}}
+  .shake{animation:shake .25s linear}
+  @keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+  .danger .heart:not(.lost){color:#ff2c3f}
 
-  /* 計時條（可視化難度加速感） */
-  .timerbar{
-    position:absolute; left:10px; right:10px; top:46px; height:6px; border-radius:999px;
-    background: rgba(255,255,255,.15); overflow:hidden;
-  }
-  .timerbar > i{
-    display:block; height:100%; width:100%; background:linear-gradient(90deg,#7ae582,#ffd166,#ef476f);
-    transform-origin:left center;
-    transform: scaleX(1);
-    transition: transform .1s linear;
-  }
+  /* 黃金蠟燭特效 */
+  .candle.golden.on { filter: drop-shadow(0 0 10px #ffd84a) drop-shadow(0 0 22px #ffea84) }
+  .candle.golden { animation: pulse 0.9s ease-in-out infinite }
+  @keyframes pulse{ 0%,100%{ transform:translate(-50%,-100%) scale(1)} 50%{ transform:translate(-50%,-100%) scale(1.06)} }
 
-  /* 響應式微調（手機較窄時字體縮小些） */
-  @media (max-width: 640px){
-    .badge{ font-size:12px; }
-    .btn{ font-size:14px; }
-  }
+  .list{margin:10px auto 0;text-align:left}
+  .list ol{margin:8px auto 0;max-width:420px;padding-left:22px}
+  .list li{padding:2px 0}
+  @media (max-width:640px){.badge{font-size:12px}.btn{font-size:14px}}
 </style>
 </head>
 <body>
-  <div class="game-wrap" id="game">
-    <div class="stage" id="stage"></div>
+<div class="game-wrap" id="game">
+  <div class="stage" id="stage"></div>
 
-    <div class="hud">
-      <div class="badge" id="scoreLbl">分數：0</div>
-      <div class="hearts" id="hearts"></div>
-      <div class="badge" id="timeLbl">15.0s</div>
-    </div>
-    <div class="timerbar"><i id="timeBar"></i></div>
+  <div class="hud">
+    <div class="badge" id="scoreLbl">分數：0 <span class="mult" id="multLbl">(x1)</span></div>
+    <div class="hearts" id="hearts"></div>
+    <div class="badge" id="timeLbl">15.0s</div>
+  </div>
+  <div class="timerbar"><i id="timeBar"></i></div>
 
-    <!-- 開始／結束遮罩 -->
-    <div class="overlay" id="overlay">
-      <div class="panel">
-        <h2 class="title">Make a Wish</h2>
-        <p class="subtitle">15 秒內點擊點燃的蠟燭！<br>前 7 秒一次 1 支，之後可能同時 2 支。</p>
-        <button class="btn" id="startBtn">開始遊戲</button>
-      </div>
+  <!-- 名稱輸入 / 開始 -->
+  <div class="overlay" id="overlay">
+    <div class="panel" id="startPanel">
+      <h2 class="title">Make a Wish</h2>
+      <p class="subtitle">輸入你的名稱，15 秒內點擊點燃的蠟燭！<br>7 秒後最多 2 支，12 秒後最多 3 支；連擊提升倍數，黃金蠟燭 +3 分。</p>
+      <input class="input" id="nameInput" placeholder="你的名字" maxlength="16" />
+      <button class="btn" id="startBtn" disabled>開始遊戲</button>
+      <div class="list" id="preBoard"></div>
     </div>
   </div>
+</div>
 
 <script>
 (() => {
   const wrap = document.getElementById('game');
+  const stage = document.getElementById('stage');
   const overlay = document.getElementById('overlay');
-  const startBtn = document.getElementById('startBtn');
   const scoreLbl = document.getElementById('scoreLbl');
   const timeLbl  = document.getElementById('timeLbl');
   const timeBar  = document.getElementById('timeBar');
   const heartsEl = document.getElementById('hearts');
+  const startBtn = document.getElementById('startBtn');
+  const nameInput= document.getElementById('nameInput');
+  const preBoard = document.getElementById('preBoard');
 
-  // 10 支蠟燭座標（以 800x600 的基準下設計），x,y 為像素
-  // y 取蛋糕上緣附近，x 作自然分佈（可再微調）
-  const candlePositions = [
-    [120, 330],[190, 320],[260, 335],[330, 325],[400, 330],
-    [470, 330],[540, 325],[610, 335],[680, 320],[750, 330]
-  ];
+  /* ===== 本機排行榜（可改成雲端後端） ===== */
+  const LS_KEY = 'mw_leaderboard_v1';
+  const getBoard = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  const setBoard = (arr) => localStorage.setItem(LS_KEY, JSON.stringify(arr.slice(0,10)));
+  function renderPreBoard(){
+    const list = getBoard();
+    if(!list.length){ preBoard.innerHTML = '<small>目前沒有紀錄，成為第一個上榜的人！</small>'; return; }
+    preBoard.innerHTML = `<b>排行榜 Top 10</b><ol>${
+      list.map((r,i)=>`<li>${r.name}：${r.score}</li>`).join('')
+    }</ol>`;
+  }
+  renderPreBoard();
 
-  // 建立 10 支蠟燭 DOM（以底部中央錨點對齊 positions）
+  /* ===== 依蛋糕上緣自動散布 10 支蠟燭（橢圓弧） ===== */
+  const BASE_W=800, BASE_H=600;
+  const ellipse = { cx:400, cy:320, rx:300, ry:70, startDeg:200, endDeg:340, count:10 };
+  function computePositions(){
+    const {cx,cy,rx,ry,startDeg,endDeg,count} = ellipse;
+    const step = (endDeg - startDeg) / (count - 1);
+    const pos = [];
+    for(let i=0;i<count;i++){
+      const deg = (startDeg + step*i) * Math.PI/180;
+      pos.push([ cx + rx*Math.cos(deg), cy + ry*Math.sin(deg) ]);
+    }
+    return pos;
+  }
+  const candlePositions = computePositions();
+
+  // 建立蠟燭
   const candles = candlePositions.map(([x,y], idx) => {
     const el = document.createElement('div');
     el.className = 'candle off';
     el.style.left = x + 'px';
     el.style.top  = y + 'px';
     el.dataset.index = idx;
-
-    const off = document.createElement('img');
-    off.src = './candle_off.png';
-    off.alt = 'candle off';
-    off.className = 'off';
-
-    const on  = document.createElement('img');
-    on.src = './candle_on.png';
-    on.alt = 'candle on';
-    on.className = 'on';
-
-    el.appendChild(off);
-    el.appendChild(on);
-    document.getElementById('stage').appendChild(el);
-    return {
-      idx, el,
-      state: 'idle',          // idle | lit
-      expireTid: null         // 點燃逾時計時器
-    }
+    const off = document.createElement('img'); off.src = './candle_off.png'; off.alt='candle off'; off.className='off';
+    const on  = document.createElement('img'); on.src  = './candle_on.png';  on.alt='candle on';  on.className='on';
+    el.appendChild(off); el.appendChild(on); stage.appendChild(el);
+    return { idx, el, state:'idle', expireTid:null, isGolden:false }
   });
 
-  // 遊戲狀態
+  /* ===== 遊戲狀態 ===== */
   const MAX_LIFE = 5;
-  const TOTAL_TIME = 15_000;   // 15s
-  const LIT_DURATION = 1_000;  // 1s
-  let life, score, startAt, ticking = false, timerId, spawnTid;
+  const TOTAL_TIME = 15_000; // 15s
+  let playerName = '';
+  let life, score, mult, streak;
+  let startAt, ticking=false, timerId, spawnTid;
+  let comboTimer = null;           // 0.6s 連擊容錯倒數
+  const COMBO_GRACE = 600;
 
-  // 初始化心數 UI
+  // 危險音效（WebAudio 心跳）
+  let ac = null, beatTimer = null;
+  function ensureAudio(){ if(!ac) ac = new (window.AudioContext||window.webkitAudioContext)(); }
+  function playBeat(){
+    ensureAudio();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = 55;       // 低頻
+    g.gain.value = 0.0001;
+    o.connect(g).connect(ac.destination);
+    const now = ac.currentTime;
+    // 簡單鼓形包絡：快速突增→快速衰減
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.5, now+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now+0.18);
+    o.start(now); o.stop(now+0.2);
+  }
+  function startDangerBeat(){
+    if(beatTimer) return;
+    playBeat();
+    beatTimer = setInterval(playBeat, 600);
+  }
+  function stopDangerBeat(){
+    if(beatTimer){ clearInterval(beatTimer); beatTimer = null; }
+  }
+
   function renderHearts(){
     heartsEl.innerHTML = '';
     for(let i=0;i<MAX_LIFE;i++){
       const h = document.createElement('i');
-      h.className = 'heart' + (i < life ? '' : ' lost');
+      h.className = 'heart' + (i<life?'':' lost');
       heartsEl.appendChild(h);
     }
+    wrap.classList.toggle('danger', life<=2);
+    if(life<=2) startDangerBeat(); else stopDangerBeat();
   }
 
   function reset(){
-    life = MAX_LIFE;
-    score = 0;
-    startAt = null;
-    ticking = false;
-    scoreLbl.textContent = `分數：${score}`;
-    timeLbl.textContent = (TOTAL_TIME/1000).toFixed(1) + 's';
-    timeBar.style.transform = `scaleX(1)`;
-    renderHearts();
-    // 關掉所有計時器與狀態
+    life = MAX_LIFE; score = 0; mult=1; streak=0;
+    clearTimeout(comboTimer); comboTimer = null;
+    startAt=null; ticking=false;
+    scoreLbl.innerHTML = `分數：${score} <span class="mult" id="multLbl">(x${mult})</span>`;
+    timeLbl.textContent = (TOTAL_TIME/1000).toFixed(1)+'s';
+    timeBar.style.transform = 'scaleX(1)';
+    stopDangerBeat(); renderHearts();
     clearTimeout(spawnTid); clearInterval(timerId);
-    candles.forEach(c => {
-      c.state = 'idle';
-      c.el.classList.remove('on','flash');
-      c.el.classList.add('off');
-      if (c.expireTid){ clearTimeout(c.expireTid); c.expireTid = null; }
+    candles.forEach(c=>{
+      c.state='idle'; c.isGolden=false;
+      c.el.classList.remove('on','flash','golden'); c.el.classList.add('off');
+      if(c.expireTid){ clearTimeout(c.expireTid); c.expireTid=null; }
     });
   }
 
-  // 依經過時間計算下一次點燃間隔（線性縮短：1.2s -> 0.7s）
-  function nextIntervalMs(elapsedMs){
-    const t = Math.min(elapsedMs / TOTAL_TIME, 1); // 0~1
-    const start = 1200, end = 700;
-    return Math.round(start + (end - start) * t);
+  // 難度：間隔 1000→450ms；點燃 1000→700ms；最後 3 秒強制 500ms
+  function nextIntervalMs(elapsed){
+    const t = Math.min(elapsed/TOTAL_TIME,1);
+    const a=1000,b=450;
+    return Math.round(a + (b-a)*t);
   }
-
-  function litCount(){
-    return candles.reduce((n,c)=> n + (c.state === 'lit' ? 1 : 0), 0);
+  function currentLitDuration(elapsed){
+    const remain = Math.max(0, TOTAL_TIME - elapsed);
+    if(remain <= 3000) return 500;                 // 火焰快閃
+    const t = Math.min(elapsed/TOTAL_TIME,1);
+    const a=1000,b=700;
+    return Math.round(a + (b-a)*t);
   }
-
-  // 取得目前允許的同時點燃上限
-  function concurrentCap(elapsedMs){
-    return (elapsedMs >= 7000) ? 2 : 1;
+  function concurrentCap(elapsed){
+    if(elapsed>=12_000) return 3;
+    if(elapsed>=7_000) return 2;
+    return 1;
   }
+  function litCount(){ return candles.reduce((n,c)=>n+(c.state==='lit'),0); }
 
-  // 產生下一支點燃
   function spawnNext(){
     if(!ticking) return;
     const elapsed = performance.now() - startAt;
+    if(litCount() >= concurrentCap(elapsed)){ spawnTid=setTimeout(spawnNext,60); return; }
+    const candidates = candles.filter(c=>c.state==='idle');
+    if(!candidates.length){ spawnTid=setTimeout(spawnNext,60); return; }
 
-    // 若已達同時點燃上限，延後再試
-    if (litCount() >= concurrentCap(elapsed)){
-      spawnTid = setTimeout(spawnNext, 60);
-      return;
-    }
+    const c = candidates[Math.floor(Math.random()*candidates.length)];
+    const duration = currentLitDuration(elapsed);
+    // 20% 機率成為黃金蠟燭
+    c.isGolden = Math.random() < 0.2;
+    c.el.classList.toggle('golden', c.isGolden);
 
-    // 挑一支可點燃的蠟燭
-    const candidates = candles.filter(c => c.state === 'idle');
-    if (candidates.length === 0){
-      // 全在點燃或沒空位，就稍後再嘗試
-      spawnTid = setTimeout(spawnNext, 60);
-      return;
-    }
-    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
-    lightCandle(chosen);
-
-    // 安排下一次點燃
-    const interval = nextIntervalMs(elapsed);
-    spawnTid = setTimeout(spawnNext, interval);
+    lightCandle(c, duration);
+    spawnTid = setTimeout(spawnNext, nextIntervalMs(elapsed));
   }
 
-  function lightCandle(c){
-    c.state = 'lit';
+  function lightCandle(c, duration){
+    c.state='lit';
     c.el.classList.remove('off'); c.el.classList.add('on','flash');
-    // 逾時沒點到 -> 扣命
-    c.expireTid = setTimeout(() => {
-      if (c.state !== 'lit') return;
-      c.state = 'idle';
-      c.el.classList.remove('on','flash');
-      c.el.classList.add('off');
-      c.expireTid = null;
+    c.expireTid = setTimeout(()=>{ // miss
+      if(c.state!=='lit') return;
+      c.state='idle'; c.el.classList.remove('on','flash'); c.el.classList.add('off');
+      c.el.classList.remove('golden'); c.isGolden=false;
+      c.expireTid=null;
       loseLife();
-    }, LIT_DURATION);
+      // miss 也給 0.6s 連擊容錯（若 0.6s 內再擊中就續連）
+      startComboGrace();
+    }, duration);
+  }
+
+  function addScore(base){
+    score += base * mult;
+    scoreLbl.innerHTML = `分數：${score} <span class="mult" id="multLbl">(x${mult})</span>`;
+  }
+
+  function startComboGrace(){
+    clearTimeout(comboTimer);
+    comboTimer = setTimeout(()=>{ streak=0; mult=1; scoreLbl.innerHTML = `分數：${score} <span class="mult" id="multLbl">(x${mult})</span>`; }, COMBO_GRACE);
   }
 
   function snuffCandle(c){
-    if (c.state !== 'lit') return;
-    c.state = 'idle';
-    c.el.classList.remove('on','flash');
-    c.el.classList.add('off');
-    if (c.expireTid) { clearTimeout(c.expireTid); c.expireTid = null; }
-    score += 1;
-    scoreLbl.textContent = `分數：${score}`;
+    if(c.state!=='lit') return;
+    c.state='idle';
+    c.el.classList.remove('on','flash'); c.el.classList.add('off');
+    if(c.expireTid){ clearTimeout(c.expireTid); c.expireTid=null; }
+    // 得分（黃金 +3，普通 +1；皆吃倍數）
+    addScore(c.isGolden ? 3 : 1);
+    c.el.classList.remove('golden'); c.isGolden=false;
+
+    // 連擊：每 5 連+1 倍（上限 x5）
+    streak++; if(streak%5===0 && mult<5) mult++;
+    scoreLbl.innerHTML = `分數：${score} <span class="mult" id="multLbl">(x${mult})</span>`;
+    startComboGrace(); // 擊中後重置 0.6s 連擊容錯倒數
   }
 
   function loseLife(){
-    life = Math.max(0, life - 1);
+    life = Math.max(0, life-1);
     renderHearts();
-    if (life <= 0){ return gameOver(); }
+    // 視覺震動
+    wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+    if(life<=0){ gameOver(); }
   }
 
   function bindClicks(){
-    candles.forEach(c => {
-      c.el.onclick = () => {
-        snuffCandle(c);
-      };
-      // 行動裝置避免雙擊縮放
-      c.el.addEventListener('touchstart', e => { e.preventDefault(); snuffCandle(c); }, {passive:false});
+    candles.forEach(c=>{
+      c.el.onclick = () => snuffCandle(c);
+      c.el.addEventListener('touchstart', e=>{ e.preventDefault(); snuffCandle(c); }, {passive:false});
     });
   }
 
   function startGame(){
-    reset();
-    overlay.style.display = 'none';
-    ticking = true;
-    startAt = performance.now();
+    playerName = nameInput.value.trim() || 'Player';
+    overlay.style.display='none';
+    reset(); ticking=true; startAt=performance.now();
 
-    // 主計時（每 100ms 更新時間/進度條）
-    timerId = setInterval(() => {
-      const elapsed = performance.now() - startAt;
+    // 主計時
+    timerId = setInterval(()=>{
+      const elapsed = performance.now()-startAt;
       const remain = Math.max(0, TOTAL_TIME - elapsed);
-      timeLbl.textContent = (remain/1000).toFixed(1) + 's';
-      timeBar.style.transform = `scaleX(${remain / TOTAL_TIME})`;
-      if (remain <= 0){ gameOver(); }
-    }, 100);
+      timeLbl.textContent = (remain/1000).toFixed(1)+'s';
+      timeBar.style.transform = `scaleX(${remain/TOTAL_TIME})`;
+      if(remain<=0) gameOver();
+    },100);
 
-    // 啟動點燃循環
-    spawnTid = setTimeout(spawnNext, 600);
+    spawnTid = setTimeout(spawnNext, 500);
   }
 
   function gameOver(){
-    if (!ticking) return;
-    ticking = false;
-    clearTimeout(spawnTid); clearInterval(timerId);
-    // 關掉所有未結束的點燃
-    candles.forEach(c => {
-      if (c.expireTid){ clearTimeout(c.expireTid); c.expireTid = null; }
-      c.state = 'idle';
-      c.el.classList.remove('on','flash'); c.el.classList.add('off');
-    });
-    // 儲存最佳紀錄
-    const best = Math.max(score, Number(localStorage.getItem('mw_best')||0));
-    localStorage.setItem('mw_best', best);
+    if(!ticking) return;
+    ticking=false; clearTimeout(spawnTid); clearInterval(timerId); stopDangerBeat();
+    candles.forEach(c=>{ if(c.expireTid){clearTimeout(c.expireTid);c.expireTid=null} c.state='idle'; c.el.classList.remove('on','flash','golden'); c.el.classList.add('off'); c.isGolden=false; });
+
+    // 更新本機排行榜
+    const board = getBoard();
+    board.push({name: playerName, score, ts: Date.now()});
+    board.sort((a,b)=> b.score - a.score || a.ts - b.ts);
+    setBoard(board);
+    const top = getBoard();
+    const htmlList = `<ol>${top.map(r=>`<li>${r.name}：${r.score}</li>`).join('')}</ol>`;
 
     overlay.innerHTML = `
       <div class="panel">
         <h2 class="title">時間到！</h2>
-        <p class="subtitle">本次分數：<b>${score}</b><br>最佳紀錄：<b>${best}</b></p>
-        <button class="btn" id="restartBtn">再玩一次</button>
+        <p class="subtitle">玩家：<b>${playerName}</b><br>本次分數：<b>${score}</b></p>
+        <div class="list"><b>排行榜 Top 10</b>${htmlList}</div>
+        <br>
+        <button class="btn" id="again">再玩一次</button>
       </div>`;
-    overlay.style.display = 'grid';
-    document.getElementById('restartBtn').onclick = () => {
+    overlay.style.display='grid';
+    document.getElementById('again').onclick = () => {
       overlay.innerHTML = `
-        <div class="panel">
+        <div class="panel" id="startPanel">
           <h2 class="title">Make a Wish</h2>
-          <p class="subtitle">15 秒內點擊點燃的蠟燭！<br>前 7 秒一次 1 支，之後可能同時 2 支。</p>
+          <p class="subtitle">輸入你的名稱，15 秒內點擊點燃的蠟燭！<br>7 秒後最多 2 支，12 秒後最多 3 支；黃金蠟燭 +3 分；連擊 0.6s 容錯。</p>
+          <input class="input" id="nameInput" placeholder="你的名字" maxlength="16" value="${playerName}">
           <button class="btn" id="startBtn">開始遊戲</button>
+          <div class="list" id="preBoard"><b>排行榜 Top 10</b>${htmlList}</div>
         </div>`;
-      document.getElementById('startBtn').onclick = startGame;
+      const sBtn = document.getElementById('startBtn');
+      const nIn  = document.getElementById('nameInput');
+      sBtn.disabled = !nIn.value.trim();
+      nIn.oninput = ()=> sBtn.disabled = !nIn.value.trim();
+      sBtn.onclick = () => { nameInput.value = nIn.value; startGame(); };
     };
   }
 
-  // 等比例縮放定位（當容器縮放時自動調整座標）
-  const ro = new ResizeObserver(entries => {
+  // 依容器縮放位置
+  const ro = new ResizeObserver(entries=>{
     const rect = entries[0].contentRect;
-    const scaleX = rect.width / 800;
-    const scaleY = rect.height / 600;
-    candles.forEach((c, i) => {
+    const sx = rect.width/BASE_W, sy = rect.height/BASE_H;
+    candles.forEach((c,i)=>{
       const [x,y] = candlePositions[i];
-      c.el.style.left = (x * scaleX) + 'px';
-      c.el.style.top  = (y * scaleY) + 'px';
-      c.el.style.width = (60 * scaleX) + 'px'; // 蠟燭寬跟著縮放
+      c.el.style.left = (x*sx)+'px';
+      c.el.style.top  = (y*sy)+'px';
+      c.el.style.width = (60*sx)+'px';
     });
   });
   ro.observe(wrap);
 
-  // 綁定
+  // 名稱輸入啟用開始鍵
+  startBtn.disabled = true;
+  nameInput.oninput = ()=> startBtn.disabled = !nameInput.value.trim();
   startBtn.onclick = startGame;
+
   bindClicks();
   reset();
 })();
